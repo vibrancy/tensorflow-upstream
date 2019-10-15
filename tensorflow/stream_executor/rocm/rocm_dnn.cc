@@ -425,6 +425,15 @@ absl::Mutex CachedFusionPlans::cached_plans_mutex;
 std::map<uint64, miopenFusionPlanDescriptor_t> CachedFusionPlans::cached_plans;
 std::set<uint64> CachedFusionPlans::unsupported_plans;
 
+dnn::ProfileResult GetProfileResultFromConvSolution(
+    miopenConvSolution_t solution) {
+  dnn::ProfileResult profile_result;
+  profile_result.set_algorithm({solution.solution_id, false});
+  profile_result.set_elapsed_time_in_ms(solution.time);
+  profile_result.set_scratch_size(solution.workspace_size);
+  return profile_result;
+}
+
 }  // namespace
 
 namespace {
@@ -2936,7 +2945,7 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
     const dnn::FilterDescriptor& filter_descriptor,
     const dnn::ConvolutionDescriptor& convolution_descriptor,
     const dnn::BatchDescriptor& output_descriptor,
-    std::vector<dnn::AlgorithmDesc>* out_algorithms) {
+    std::vector<dnn::ProfileResult>* out_algorithms) {
   auto miopen = miopen_->GetHandle(parent_, stream);
 
   ScopedTensorDescriptor input_nd{input_descriptor,
@@ -3054,7 +3063,8 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
           return false;
         }
 
-        out_algorithms->emplace_back(best_solution.solution_id, false);
+        out_algorithms->emplace_back(
+            GetProfileResultFromConvSolution(best_solution));
 
       } else {
         for (int i = 0; i < solutionCount; i++) {
@@ -3077,7 +3087,8 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
             return false;
           }
 
-          out_algorithms->emplace_back(solution.solution_id, false);
+          out_algorithms->emplace_back(
+              GetProfileResultFromConvSolution(solution));
         }
       }
       break;
@@ -3122,7 +3133,8 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
           return false;
         }
 
-        out_algorithms->emplace_back(best_solution.solution_id, false);
+        out_algorithms->emplace_back(
+            GetProfileResultFromConvSolution(best_solution));
 
       } else {
         for (int i = 0; i < solutionCount; i++) {
@@ -3146,7 +3158,8 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
             return false;
           }
 
-          out_algorithms->emplace_back(solution.solution_id, false);
+          out_algorithms->emplace_back(
+              GetProfileResultFromConvSolution(solution));
         }
       }
       break;
@@ -3191,7 +3204,8 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
           return false;
         }
 
-        out_algorithms->emplace_back(best_solution.solution_id, false);
+        out_algorithms->emplace_back(
+            GetProfileResultFromConvSolution(best_solution));
 
       } else {
         for (int i = 0; i < solutionCount; i++) {
@@ -3215,7 +3229,8 @@ bool MIOpenSupport::GetMIOpenConvolveAlgorithms(
             return false;
           }
 
-          out_algorithms->emplace_back(solution.solution_id, false);
+          out_algorithms->emplace_back(
+              GetProfileResultFromConvSolution(solution));
         }
       }
       break;
