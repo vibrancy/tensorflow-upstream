@@ -19,6 +19,7 @@ limitations under the License.
 
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/kernels/training_ops.h"
+#include "tensorflow/core/util/gpu_kernel_helper.h"
 
 namespace tensorflow {
 
@@ -620,23 +621,6 @@ template struct functor::ApplyKerasMomentum<GPUDevice, double>;
 #ifndef PLATFORM_WINDOWS
 template struct functor::ApplyKerasMomentum<GPUDevice, complex64>;
 template struct functor::ApplyKerasMomentum<GPUDevice, complex128>;
-#endif
-#endif
-
-template struct functor::SparseApplyKerasMomentum<GPUDevice, Eigen::half,
-                                                  int32>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, Eigen::half,
-                                                  int64>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, float, int32>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, float, int64>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, double, int32>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, double, int64>;
-#if !defined(TENSORFLOW_USE_NVCC)  && !defined(TENSORFLOW_USE_ROCM)
-#ifndef PLATFORM_WINDOWS
-template struct functor::SparseApplyKerasMomentum<GPUDevice, complex64, int32>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, complex64, int64>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, complex128, int32>;
-template struct functor::SparseApplyKerasMomentum<GPUDevice, complex128, int64>;
 #endif
 #endif
 
