@@ -4791,6 +4791,7 @@ tf_kernel_library(
     prefix = "dropout_op",
     deps = NN_DEPS + [
         ":conv_ops",
+        ":random_op",
     ],
 )
 
