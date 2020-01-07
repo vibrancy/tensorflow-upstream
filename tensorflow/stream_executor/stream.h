@@ -562,14 +562,6 @@ class Stream {
   Stream& ThenDropoutForward(const dnn::DropoutDescriptor& dropout_params,
                              const dnn::BatchDescriptor& noise_dimensions,
                              const dnn::BatchDescriptor& input_dimensions,
-                             const DeviceMemory<double>& input_data,
-                             const dnn::BatchDescriptor& output_dimensions,
-                             DeviceMemory<double>* output_data,
-                             ScratchAllocator* workspace_allocator = nullptr);
-
-  Stream& ThenDropoutForward(const dnn::DropoutDescriptor& dropout_params,
-                             const dnn::BatchDescriptor& noise_dimensions,
-                             const dnn::BatchDescriptor& input_dimensions,
                              const DeviceMemory<float>& input_data,
                              const dnn::BatchDescriptor& output_dimensions,
                              DeviceMemory<float>* output_data,
@@ -582,22 +574,6 @@ class Stream {
                              const dnn::BatchDescriptor& output_dimensions,
                              DeviceMemory<Eigen::half>* output_data,
                              ScratchAllocator* workspace_allocator = nullptr);
-
-  Stream& ThenDropoutForward(const dnn::DropoutDescriptor& dropout_params,
-                             const dnn::BatchDescriptor& noise_dimensions,
-                             const dnn::BatchDescriptor& input_dimensions,
-                             const DeviceMemory<int8>& input_data,
-                             const dnn::BatchDescriptor& output_dimensions,
-                             DeviceMemory<int8>* output_data,
-                             ScratchAllocator* workspace_allocator = nullptr);
-
-  Stream& ThenDropoutBackward(const dnn::DropoutDescriptor& dropout_params,
-                              const dnn::BatchDescriptor& noise_dimensions,
-                              const dnn::BatchDescriptor& input_diff_dimensions,
-                              const DeviceMemory<double>& input_diff_data,
-                              const dnn::BatchDescriptor& output_dimensions,
-                              DeviceMemory<double>* output_data,
-                              ScratchAllocator* workspace_allocator = nullptr);
 
   Stream& ThenDropoutBackward(const dnn::DropoutDescriptor& dropout_params,
                               const dnn::BatchDescriptor& noise_dimensions,
@@ -613,14 +589,6 @@ class Stream {
                               const DeviceMemory<Eigen::half>& input_diff_data,
                               const dnn::BatchDescriptor& output_dimensions,
                               DeviceMemory<Eigen::half>* output_data,
-                              ScratchAllocator* workspace_allocator = nullptr);
-
-  Stream& ThenDropoutBackward(const dnn::DropoutDescriptor& dropout_params,
-                              const dnn::BatchDescriptor& noise_dimensions,
-                              const dnn::BatchDescriptor& input_diff_dimensions,
-                              const DeviceMemory<int8>& input_diff_data,
-                              const dnn::BatchDescriptor& output_dimensions,
-                              DeviceMemory<int8>* output_data,
                               ScratchAllocator* workspace_allocator = nullptr);
 
   Stream &ThenPoolForward(const dnn::PoolingDescriptor &pooling_dimensions,
