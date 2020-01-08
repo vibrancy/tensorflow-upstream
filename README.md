@@ -33,6 +33,37 @@ to
 [announce@tensorflow.org](https://groups.google.com/a/tensorflow.org/forum/#!forum/announce).
 See all the [mailing lists](https://www.tensorflow.org/community/forums).
 
+## Tensorflow ROCm port
+
+Please follow the instructions [here](https://github.com/RadeonOpenCompute/ROCm-docker/blob/master/quick-start.md) to set up your ROCm stack.
+A docker container: **rocm/tensorflow:latest(https://hub.docker.com/r/rocm/tensorflow/)** is readily available to be used:
+```
+alias drun='sudo docker run \
+      -it \
+      --network=host \
+      --device=/dev/kfd \
+      --device=/dev/dri \
+      --ipc=host \
+      --shm-size 16G \
+      --group-add video \
+      --cap-add=SYS_PTRACE \
+      --security-opt seccomp=unconfined \
+      -v $HOME/dockerx:/dockerx'
+
+drun rocm/tensorflow:latest
+```
+
+
+We maintain `tensorflow-rocm` whl packages on PyPI [here](https://pypi.org/project/tensorflow-rocm), to install tensorflow-rocm package using pip:
+```
+# Install some ROCm dependencies
+sudo apt install rocm-libs hipcub miopen-hip
+
+# Pip3 install the whl package from PyPI
+pip3 install --user tensorflow-rocm --upgrade
+```
+For details on Tensorflow ROCm port, please take a look at the [ROCm-specific README file](README.ROCm.md).
+
 ## Install
 
 See the [TensorFlow install guide](https://www.tensorflow.org/install) for the
@@ -103,17 +134,17 @@ open-source software development:
 
 ### Official Builds
 
-Build Type               | Status                                                                                                                                                                                                                                                                                                                                        | Artifacts
------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------
-**Linux CPU**            | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-cc.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-cc.html)                                                                                                                                                                        | [PyPI](https://pypi.org/project/tf-nightly/)
-**Linux GPU**            | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-gpu-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-gpu-py3.html)                                                                                                                                                              | [PyPI](https://pypi.org/project/tf-nightly-gpu/)
-**Linux XLA**            | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-xla.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-xla.html)                                                                                                                                                                      | TBA
-**macOS**                | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/macos-py2-cc.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/macos-py2-cc.html)                                                                                                                                                                  | [PyPI](https://pypi.org/project/tf-nightly/)
-**Windows CPU**          | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-cpu.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-cpu.html)                                                                                                                                                                    | [PyPI](https://pypi.org/project/tf-nightly/)
-**Windows GPU**          | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-gpu.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-gpu.html)                                                                                                                                                                    | [PyPI](https://pypi.org/project/tf-nightly-gpu/)
-**Android**              | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/android.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/android.html)                                                                                                                                                                            | [![Download](https://api.bintray.com/packages/google/tensorflow/tensorflow/images/download.svg)](https://bintray.com/google/tensorflow/tensorflow/_latestVersion)
-**Raspberry Pi 0 and 1** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi01-py2.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi01-py2.html) [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi01-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi01-py3.html) | [Py2](https://storage.googleapis.com/tensorflow-nightly/tensorflow-1.10.0-cp27-none-linux_armv6l.whl) [Py3](https://storage.googleapis.com/tensorflow-nightly/tensorflow-1.10.0-cp34-none-linux_armv6l.whl)
-**Raspberry Pi 2 and 3** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi23-py2.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi23-py2.html) [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi23-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi23-py3.html) | [Py2](https://storage.googleapis.com/tensorflow-nightly/tensorflow-1.10.0-cp27-none-linux_armv7l.whl) [Py3](https://storage.googleapis.com/tensorflow-nightly/tensorflow-1.10.0-cp34-none-linux_armv7l.whl)
+Build Type               | Status                                                                                                                                                                           | Artifacts
+------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------
+**Linux CPU**            | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-cc.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-cc.html)           | [PyPI](https://pypi.org/project/tf-nightly/)
+**Linux GPU**            | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-gpu-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-gpu-py3.html) | [PyPI](https://pypi.org/project/tf-nightly-gpu/)
+**Linux XLA**            | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-xla.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/ubuntu-xla.html)         | TBA
+**macOS**                | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/macos-py2-cc.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/macos-py2-cc.html)     | [PyPI](https://pypi.org/project/tf-nightly/)
+**Windows CPU**          | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-cpu.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-cpu.html)       | [PyPI](https://pypi.org/project/tf-nightly/)
+**Windows GPU**          | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-gpu.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/windows-gpu.html)       | [PyPI](https://pypi.org/project/tf-nightly-gpu/)
+**Android**              | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/android.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/android.html)               | [![Download](https://api.bintray.com/packages/google/tensorflow/tensorflow/images/download.svg)](https://bintray.com/google/tensorflow/tensorflow/_latestVersion)
+**Raspberry Pi 0 and 1** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi01-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi01-py3.html)           | [Py3](https://storage.googleapis.com/tensorflow-nightly/tensorflow-1.10.0-cp34-none-linux_armv6l.whl)
+**Raspberry Pi 2 and 3** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi23-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/rpi23-py3.html)           | [Py3](https://storage.googleapis.com/tensorflow-nightly/tensorflow-1.10.0-cp34-none-linux_armv7l.whl)
 
 ### Community Supported Builds
 
