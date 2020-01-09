@@ -81,6 +81,7 @@ tf_kernel_library(
     ] + if_cuda_or_rocm([
         "//tensorflow/core/kernels:cuda_solvers",
         "//tensorflow/core/kernels:cuda_sparse",
+        "//tensorflow/core/kernels:cuda_rocm_shared_hdrs",
     ]),
     alwayslink = 1,
 )

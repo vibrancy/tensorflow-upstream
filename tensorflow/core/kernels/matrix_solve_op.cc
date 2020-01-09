@@ -114,7 +114,7 @@ class MatrixSolveOp : public LinearAlgebraOp<Scalar> {
   TF_DISALLOW_COPY_AND_ASSIGN(MatrixSolveOp);
 };
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA // depends on CudaSolver
 typedef Eigen::GpuDevice GPUDevice;
 
 template <class Scalar>

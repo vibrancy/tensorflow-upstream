@@ -72,7 +72,7 @@ class CholeskyOp : public LinearAlgebraOp<Scalar> {
   }
 };
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA // depends on CudaSolver
 typedef Eigen::GpuDevice GPUDevice;
 
 namespace functor {

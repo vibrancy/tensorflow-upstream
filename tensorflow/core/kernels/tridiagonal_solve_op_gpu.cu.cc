@@ -15,7 +15,7 @@ limitations under the License.
 
 // See docs in ../ops/linalg_ops.cc.
 
-#ifdef GOOGLE_CUDA
+#ifdef GOOGLE_CUDA // depends on CudaSolver
 
 #define EIGEN_USE_GPU
 

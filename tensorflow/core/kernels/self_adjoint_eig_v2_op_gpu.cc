@@ -15,7 +15,7 @@ limitations under the License.
 
 // See docs in ../ops/linalg_ops.cc.
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA // depends on CudaSolver
 
 #include <numeric>
 #include <type_traits>

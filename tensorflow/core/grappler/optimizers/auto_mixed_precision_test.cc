@@ -17,7 +17,7 @@ limitations under the License.
 // otherwise the optimizer will not turn clearlist nodes to float16. When
 // looking at clearlist nodes, this optimizer checks if the nodes have a float16
 // GPU OpKernel, but without CUDA there are no GPU OpKernels at all.
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 
 #include "tensorflow/core/grappler/optimizers/auto_mixed_precision.h"
 
@@ -1078,4 +1078,4 @@ TEST_F(AutoMixedPrecisionTest, TanhOp) {
 }  // namespace grappler
 }  // namespace tensorflow
 
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM

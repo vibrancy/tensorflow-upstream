@@ -19,7 +19,7 @@ limitations under the License.
 #include "tensorflow/core/platform/byte_order.h"
 #include "tensorflow/core/platform/cpu_info.h"
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 #include "tensorflow/core/common_runtime/gpu/gpu_init.h"
 #include "tensorflow/core/platform/stream_executor.h"
 #endif  // GOOGLE_CUDA
@@ -67,7 +67,7 @@ int GetNumAvailableGPUs(
 }
 
 int64 AvailableGPUMemory(int gpu_id) {
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
   // Look up the device, to see its attributes.
   se::Platform* gpu_platform = GPUMachineManager();
   CHECK_LT(gpu_id, gpu_platform->VisibleDeviceCount());

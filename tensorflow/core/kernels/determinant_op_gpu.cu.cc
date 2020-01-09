@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 
 #define EIGEN_USE_GPU
 
@@ -21,7 +21,9 @@ limitations under the License.
 
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/framework/tensor_types.h"
+#if GOOGLE_CUDA
 #include "tensorflow/core/kernels/cuda_solvers.h"
+#endif
 #include "tensorflow/core/kernels/determinant_op.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
@@ -167,4 +169,4 @@ template struct LogDeterminantFromPivotedLUFunctor<GPUDevice, complex128>;
 }  // namespace functor
 }  // namespace tensorflow
 
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM

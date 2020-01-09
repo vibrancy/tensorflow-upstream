@@ -38,7 +38,7 @@ limitations under the License.
 #include "tensorflow/core/kernels/cuda_sparse.h"
 #endif
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA 
 #include "tensorflow/stream_executor/cuda/cuda_activation.h"
 using ::perftools::gputools::cuda::ScopedActivateExecutorContext;
 #elif TENSORFLOW_USE_ROCM
@@ -361,10 +361,10 @@ class DenseToCSRSparseMatrixGPUOp : public AsyncOpKernel {
 
 REGISTER_GPU(GPU, float)
 REGISTER_GPU(GPU, double)
-#if GOOGLE_CUDA
+//#if GOOGLE_CUDA
 REGISTER_GPU(GPU, complex64)
 REGISTER_GPU(GPU, complex128)
-#endif
+//#endif
 
 namespace functor {
 

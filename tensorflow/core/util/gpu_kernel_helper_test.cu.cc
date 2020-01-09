@@ -103,7 +103,7 @@ __global__ void CudaShuffleGetSrcLaneTest(
       if (actual != expected) {
         printf("Cuda%sGetSrcLane(%d, %d) for lane %d returned %d, not %d\n",
                op_name, param, width, lane_id, actual, expected);
-        CudaAtomicAdd(failure_count, 1);
+        GpuAtomicAdd(failure_count, 1);
       }
     };
     for (int src_lane = -warpSize; src_lane <= warpSize; ++src_lane) {
@@ -293,4 +293,4 @@ TEST(CudaDeviceFunctionsTest, ShuffleGetSrcLane) {
 
 }  // namespace tensorflow
 
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM

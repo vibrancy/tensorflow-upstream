@@ -24,7 +24,7 @@ limitations under the License.
 // pass quite as many raw pointers around. Would also be nice to reduce code
 // duplication.
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA // depends on CudaSolver
 #define EIGEN_USE_GPU
 
 #include <algorithm>

@@ -62,12 +62,10 @@ limitations under the License.
 #include "tensorflow/core/platform/stream_executor.h"
 #include "tensorflow/core/protobuf/autotuning.pb.h"
 #include "tensorflow/core/util/proto/proto_utils.h"
-#endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM
-#if GOOGLE_CUDA
 #include "tensorflow/stream_executor/gpu/asm_compiler.h"
 #include "tensorflow/stream_executor/gpu/redzone_allocator.h"
 #include "tensorflow/stream_executor/tf_allocator_adapter.h"
-#endif  // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 
 namespace tensorflow {
 
@@ -733,7 +731,7 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
     return;
   }
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA 
   // Tensor Core (NVIDIA Volta+ GPUs) supports efficient convolution with fp16
   // in NHWC data layout. In all other configurations it's more efficient to
   // run computation in NCHW data format.

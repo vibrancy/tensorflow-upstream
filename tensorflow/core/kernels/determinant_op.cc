@@ -17,7 +17,7 @@ limitations under the License.
 
 #include <cmath>
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 #define EIGEN_USE_GPU
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/kernels/determinant_op.h"
@@ -120,7 +120,7 @@ class DeterminantOp : public LinearAlgebraOp<Scalar> {
   }
 };
 
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA // depends on CudaSolver
 
 typedef Eigen::GpuDevice GPUDevice;
 
