@@ -87,6 +87,8 @@ RUN bash -c 'echo -e "gfx803\ngfx900\ngfx906" >> ${ROCM_PATH}/bin/target.lst'
 # Filed https://github.com/bazelbuild/bazel/issues/11163 for tracking this
 RUN touch ${ROCM_PATH}/.info/version
 
+RUN wget https://www.dropbox.com/s/jixaw2y20vhw4uf/MIOpen-HIP-2.2.0.7630-f38e87a-ubuntu-16.04_amd64.deb && dpkg -i MIOpen*.deb && rm MIOpen*.deb
+
 # Copy and run the install scripts.
 COPY install/*.sh /install/
 ARG DEBIAN_FRONTEND=noninteractive
