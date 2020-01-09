@@ -4439,9 +4439,9 @@ def dropout_v2(x, rate, noise_shape=None, seed=None, name=None):
     # implementation
     if build_info.is_rocm_build and \
        (x.dtype == dtypes.float32 or x.dtype == dtypes.float16):
-      if seed is None:
-        seed = 0
-      return gen_nn_ops.dropout(x,rate,noise_shape=noise_shape,seed=seed)
+      seed1, seed2 = random_seed.get_seed(seed)
+      res, _ = gen_nn_ops.dropout(x,rate,noise_shape=noise_shape,seed=seed1,seed2=seed2)
+      return res
 
     # Sample a uniform distribution on [0.0, 1.0) and select values larger than
     # rate.

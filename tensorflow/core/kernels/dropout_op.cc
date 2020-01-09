@@ -19,6 +19,7 @@ limitations under the License.
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/kernels/conv_ops_gpu.h"
+#include "tensorflow/core/kernels/dropout_op_gpu.h"
 #include "tensorflow/core/kernels/random_op.h"
 #include "tensorflow/core/platform/stream_executor.h"
 #include "tensorflow/core/util/guarded_philox_random.h"
@@ -35,7 +36,7 @@ class DropoutOp : public OpKernel {
 
  public:
   explicit DropoutOp(OpKernelConstruction* context) : OpKernel(context) {
-    generator_.Init(0, 0);
+    generator_.Init(context);
   }
 
   ~DropoutOp() override {}
@@ -66,46 +67,71 @@ class DropoutOp : public OpKernel {
                 errors::InvalidArgument("MIOpen only supports input dimensions "
                                         "to match noise dimensions."));
 
-    const Tensor& in3 = ctx->input(3);
-    OP_REQUIRES(
-        ctx, in3.dims() == 0,
-        errors::InvalidArgument("Dropout seed must be a scalar tensor."));
-    auto seed_src_ptr =
-        AsDeviceMemory<int64>(&in3.scalar<int64>()(), sizeof(int64));
-    int64 seed = 0;
-    stream->ThenMemcpy(&seed, seed_src_ptr, sizeof(int64));
-    generator_.ResetSeeds(seed, 0);
-
     se::dnn::DropoutDescriptor dropout_desc;
     dropout_desc.set_rate(static_cast<float>(rate));
-    dropout_desc.set_seed(seed);
+
+    static int64 DropoutScratchSize = GetDnnWorkspaceLimit(
+        // default value is in bytes despite the name of the environment
+        // variable
+        "TF_CUDNN_WORKSPACE_LIMIT_IN_MB", 1LL << 32  // 4GB
+    );
+    DnnScratchAllocator scratch_allocator(DropoutScratchSize, ctx);
 
     // Build random uniform distribution
     typedef random::UniformDistribution<random::PhiloxRandom, T> Distribution;
     Distribution dist;
 
-    std::vector<T> random_nums(in0.shape().num_elements());
-    functor::FillPhiloxRandom<Eigen::ThreadPoolDevice, Distribution>()(
-        ctx, ctx->eigen_device<Eigen::ThreadPoolDevice>(),
+    se::DeviceMemory<uint8> random_nums;
+    auto allocated =
+        scratch_allocator.AllocateBytes(in0.shape().num_elements() * sizeof(T));
+    if (!allocated.ok() || (random_nums = allocated.ValueOrDie()) == nullptr) {
+      LOG(ERROR) << "Failed to allocate random numbers for dropout";
+      return;
+    }
+
+    int64 random_nums_size = random_nums.size() / sizeof(T);
+    functor::FillPhiloxRandom<Device, Distribution>()(
+        ctx, ctx->eigen_device<Device>(),
         // Multiplier 256 is the same as in FillPhiloxRandomTask; do not change
         // it just here.
-        generator_.ReserveRandomOutputs(random_nums.size() * sizeof(T), 256),
-        random_nums.data(), random_nums.size(), dist);
+        generator_.ReserveRandomOutputs(random_nums_size, 256),
+        static_cast<T*>(random_nums.opaque()), random_nums_size, dist);
 
-    Eigen::Tensor<T, 1> rate_tensor(random_nums.size());
-    rate_tensor.setConstant(rate);
-    Eigen::TensorMap<Eigen::Tensor<T, 1>> random_tensor(random_nums.data(),
-                                                        random_nums.size());
-    Eigen::Tensor<bool, 1> mask_tensor(random_nums.size());
-    mask_tensor = random_tensor >= rate_tensor;
-    std::vector<uint8> mask = std::vector<uint8>(
-        mask_tensor.data(), mask_tensor.data() + mask_tensor.size());
-    dropout_desc.set_mask(mask);
+    se::DeviceMemory<uint8> mask;
+    allocated = scratch_allocator.AllocateBytes(in0.shape().num_elements() *
+                                                sizeof(uint8));
+    if (!allocated.ok() || (mask = allocated.ValueOrDie()) == nullptr) {
+      LOG(ERROR) << "Failed to allocate dropout mask";
+      return;
+    }
+
+    Tensor output_mask;
+    AllocationAttributes allocation_attr;
+    Status allocation_status(ctx->allocate_temp(
+        DT_UINT8, TensorShape({in0.shape().num_elements() * sizeof(uint8)}),
+        &output_mask, AllocatorAttributes(), allocation_attr));
+    if (!allocation_status.ok()) {
+      LOG(ERROR) << "Failed to allocate the requested memory size.";
+    }
+
+    dropout_kernels::GenMask(
+        ctx, static_cast<const T*>(random_nums.opaque()),
+        static_cast<const T*>(rate_src_ptr.opaque()),
+        static_cast<uint8*>(output_mask.flat<uint8>().data()),
+        in0.shape().num_elements());
+    dropout_desc.set_mask(AsDeviceMemory(output_mask.flat<uint8>().data(),
+                                         output_mask.flat<uint8>().size()));
 
     // Allocate output, and exit early if possible
     Tensor* output;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, in0.shape(), &output));
     if (output->NumElements() == 0) return;
+
+    Tensor* scratch = &output_mask;
+    OP_REQUIRES_OK(
+        ctx, ctx->allocate_output(
+                 1, TensorShape({output_mask.flat<uint8>().size()}), &scratch));
+    *scratch = output_mask;
 
     // Fill one to higher dimensions
     gtl::InlinedVector<int64, 4> input_dim_sizes = in0.shape().dim_sizes();
@@ -142,6 +168,12 @@ class DropoutOp : public OpKernel {
         .set_width(noise_cols)
         .set_layout(se::dnn::DataLayout::kBatchDepthYX);
 
+    for (size_t i = 0; i < noise_dim_size.size(); ++i) {
+      OP_REQUIRES(ctx, noise_dim_size[i] == input_dim_sizes[i],
+                  errors::InvalidArgument(
+                      "Dropout noise shape must be same with input shape."));
+    }
+
     se::dnn::BatchDescriptor output_desc;
     output_desc.CloneFrom(input_desc);
 
@@ -150,13 +182,6 @@ class DropoutOp : public OpKernel {
 
     auto output_data =
         AsDeviceMemory(output->flat<T>().data(), output->flat<T>().size());
-
-    static int64 DropoutScratchSize = GetDnnWorkspaceLimit(
-        // default value is in bytes despite the name of the environment
-        // variable
-        "TF_CUDNN_WORKSPACE_LIMIT_IN_MB", 1LL << 32  // 4GB
-    );
-    DnnScratchAllocator scratch_allocator(DropoutScratchSize, ctx);
 
     bool status = stream
                       ->ThenDropoutForward(dropout_desc, noise_desc, input_desc,
@@ -181,11 +206,9 @@ TF_CALL_half(REGISTER_DROPOUT_GPU);
 template <typename Device, typename T>
 class DropoutGradOp : public OpKernel {
  private:
-  GuardedPhiloxRandom generator_;
 
  public:
   explicit DropoutGradOp(OpKernelConstruction* context) : OpKernel(context) {
-    generator_.Init(0, 0);
   }
 
   ~DropoutGradOp() override {}
@@ -216,41 +239,22 @@ class DropoutGradOp : public OpKernel {
                 errors::InvalidArgument("MIOpen only supports input dimensions "
                                         "to match noise dimensions."));
 
-    const Tensor& in3 = ctx->input(3);
-    OP_REQUIRES(
-        ctx, in3.dims() == 0,
-        errors::InvalidArgument("Dropout seed must be a scalar tensor."));
-    auto seed_src_ptr =
-        AsDeviceMemory<int64>(&in3.scalar<int64>()(), sizeof(int64));
-    int64 seed = 0;
-    stream->ThenMemcpy(&seed, seed_src_ptr, sizeof(int64));
-    generator_.ResetSeeds(seed, 0);
-
     se::dnn::DropoutDescriptor dropout_desc;
     dropout_desc.set_rate(static_cast<float>(rate));
-    dropout_desc.set_seed(seed);
 
-    // Build random uniform distribution
-    typedef random::UniformDistribution<random::PhiloxRandom, T> Distribution;
-    Distribution dist;
+    const Tensor& in3 = ctx->input(3);
+    OP_REQUIRES(ctx, in3.dtype() == DT_UINT8,
+                errors::InvalidArgument("Dropout reservespace must to UINT8."));
 
-    std::vector<T> random_nums(in0.shape().num_elements());
-    functor::FillPhiloxRandom<Eigen::ThreadPoolDevice, Distribution>()(
-        ctx, ctx->eigen_device<Eigen::ThreadPoolDevice>(),
-        // Multiplier 256 is the same as in FillPhiloxRandomTask; do not change
-        // it just here.
-        generator_.ReserveRandomOutputs(random_nums.size() * sizeof(T), 256),
-        random_nums.data(), random_nums.size(), dist);
+    static int64 DropoutScratchSize = GetDnnWorkspaceLimit(
+        // default value is in bytes despite the name of the environment
+        // variable
+        "TF_CUDNN_WORKSPACE_LIMIT_IN_MB", 1LL << 32  // 4GB
+    );
+    DnnScratchAllocator scratch_allocator(DropoutScratchSize, ctx);
 
-    Eigen::Tensor<T, 1> rate_tensor(random_nums.size());
-    rate_tensor.setConstant(rate);
-    Eigen::TensorMap<Eigen::Tensor<T, 1>> random_tensor(random_nums.data(),
-                                                        random_nums.size());
-    Eigen::Tensor<bool, 1> mask_tensor(random_nums.size());
-    mask_tensor = random_tensor >= rate_tensor;
-    std::vector<uint8> mask = std::vector<uint8>(
-        mask_tensor.data(), mask_tensor.data() + mask_tensor.size());
-    dropout_desc.set_mask(mask);
+    dropout_desc.set_mask(
+        AsDeviceMemory(in3.flat<uint8>().data(), in3.flat<uint8>().size()));
 
     // Allocate output, and exit early if possible
     Tensor* output;
@@ -292,6 +296,12 @@ class DropoutGradOp : public OpKernel {
         .set_width(noise_cols)
         .set_layout(se::dnn::DataLayout::kBatchDepthYX);
 
+    for (size_t i = 0; i < noise_dim_size.size(); ++i) {
+      OP_REQUIRES(ctx, noise_dim_size[i] == input_dim_sizes[i],
+                  errors::InvalidArgument(
+                      "Dropout noise shape must be same with input shape."));
+    }
+
     se::dnn::BatchDescriptor output_desc;
     output_desc.CloneFrom(input_desc);
 
@@ -300,13 +310,6 @@ class DropoutGradOp : public OpKernel {
 
     auto output_data =
         AsDeviceMemory(output->flat<T>().data(), output->flat<T>().size());
-
-    static int64 DropoutScratchSize = GetDnnWorkspaceLimit(
-        // default value is in bytes despite the name of the environment
-        // variable
-        "TF_CUDNN_WORKSPACE_LIMIT_IN_MB", 1LL << 32  // 4GB
-    );
-    DnnScratchAllocator scratch_allocator(DropoutScratchSize, ctx);
 
     bool status = stream
                       ->ThenDropoutBackward(dropout_desc, noise_desc,
