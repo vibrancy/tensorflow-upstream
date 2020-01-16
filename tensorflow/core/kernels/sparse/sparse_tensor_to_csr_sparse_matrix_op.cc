@@ -36,7 +36,7 @@ limitations under the License.
 #include "tensorflow/core/kernels/cuda_sparse.h"
 #endif
 
-#if GOOGLE_CUDA 
+#if GOOGLE_CUDA
 #include "tensorflow/stream_executor/cuda/cuda_activation.h"
 using ::perftools::gputools::cuda::ScopedActivateExecutorContext;
 #elif TENSORFLOW_USE_ROCM
@@ -327,10 +327,8 @@ extern template struct COOSparseMatrixToCSRSparseMatrix<GPUDevice>;
 
 REGISTER_GPU(float)
 REGISTER_GPU(double)
-//#if GOOGLE_CUDA
 REGISTER_GPU(complex64)
 REGISTER_GPU(complex128)
-//#endif
 
 #undef REGISTER_GPU
 

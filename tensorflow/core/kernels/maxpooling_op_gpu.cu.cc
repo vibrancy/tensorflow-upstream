@@ -102,7 +102,7 @@ __global__ void MaxPoolForwardNCHW(
   }
 }
 
-#if GOOGLE_CUDA //|| TENSORFLOW_USE_ROCM
+#if GOOGLE_CUDA
 // The parameters for MaxPoolForwardNoMaskKernel_NCHW_VECT_C are the same as for
 // MaxPoolForwardNCHW above, except that mask is not supported, and each
 // element of the input and output contains 4 adjacent channel values for

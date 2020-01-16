@@ -3984,9 +3984,7 @@ tf_kernel_library(
     prefix = "reduction_ops",
     deps = MATH_DEPS + 
     [":cuda_rocm_shared_hdrs",
-    ":transpose_functor"]
-    + if_cuda(["@cub_archive//:cub"]) 
-    + if_rocm(["@local_config_rocm//rocm:rocprim"]),
+    ":transpose_functor"],
 )
 
 tf_kernel_library(
@@ -4634,11 +4632,7 @@ tf_kernel_library(
         "topk_op_gpu_int8.cu.cc",
         "topk_op_gpu_uint8.cu.cc",
     ],
-    deps = NN_DEPS + if_cuda_or_rocm([":cuda_rocm_shared_hdrs"]) + if_cuda([
-        "@cub_archive//:cub",
-    ]) + if_rocm([
-        "@local_config_rocm//rocm:rocprim",
-    ]),
+    deps = NN_DEPS + if_cuda_or_rocm([":cuda_rocm_shared_hdrs"]),
 )
 
 tf_kernel_library(

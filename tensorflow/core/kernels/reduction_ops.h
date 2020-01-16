@@ -47,18 +47,7 @@ template <typename Scalar>
 struct EuclideanNormReducer {
   Scalar initialize() const { return Scalar(0); }
 };
-/*
-#if TENSORFLOW_USE_ROCM
-template <>
-struct EuclideanNormReducer<hipFloatComplex> {
-  std::complex<float> initialize() const { return std::complex<float>(0.0); }
-};
-template <>
-struct EuclideanNormReducer<hipDoubleComplex> {
-  std::complex<double> initialize() const { return std::complex<double>(0.0); }
-};
-#endif
-*/
+
 template <typename Scalar>
 struct ReducerTraits<EuclideanNormReducer<Scalar>> {
   enum { IsScalarIdentity = false };
@@ -174,17 +163,13 @@ FIX_MEAN_IDENTITY(double)
 template <>
 struct Identity<functor::MeanReducer<hipFloatComplex> > {
   static hipFloatComplex identity(const functor::MeanReducer<hipFloatComplex>&) { 
-    auto rv = hipFloatComplex(Eigen::NumTraits<float>::quiet_NaN(), Eigen::NumTraits<float>::quiet_NaN());
-    return rv;
-    //return *reinterpret_cast<const std::complex<float>*>(&rv);
+    return hipFloatComplex(Eigen::NumTraits<float>::quiet_NaN(), Eigen::NumTraits<float>::quiet_NaN());
   }
 };
 template <>
 struct Identity<functor::MeanReducer<hipDoubleComplex> > {
   static hipDoubleComplex identity(const functor::MeanReducer<hipDoubleComplex>&) { 
-    auto rv=hipDoubleComplex(Eigen::NumTraits<double>::quiet_NaN(), Eigen::NumTraits<double>::quiet_NaN());
-    return rv;
-    //return *reinterpret_cast<const std::complex<double>*>(&rv);
+    return hipDoubleComplex(Eigen::NumTraits<double>::quiet_NaN(), Eigen::NumTraits<double>::quiet_NaN());
   }
 };
 #else
@@ -209,7 +194,6 @@ void FillIdentityEigenImplWithCast(const Device& d, OUT_T out, const Reducer& re
       "Error: FillIdentityEigenImplWithCast with incompatible types?");
   memcpy(&cast_id, &id, sizeof(cast_id)); // to avoid strict-aliasing warnings
   out.device(d) = out.constant(cast_id);
-  //out.device(d) = out.constant(reinterpret_cast<const T&>(id));
 }
 
 template <typename Device, typename Reducer>

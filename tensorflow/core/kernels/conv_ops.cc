@@ -731,7 +731,7 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
     return;
   }
 
-#if GOOGLE_CUDA 
+#if GOOGLE_CUDA
   // Tensor Core (NVIDIA Volta+ GPUs) supports efficient convolution with fp16
   // in NHWC data layout. In all other configurations it's more efficient to
   // run computation in NCHW data format.

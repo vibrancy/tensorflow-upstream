@@ -24,9 +24,15 @@ limitations under the License.
 namespace tensorflow {
 namespace {
 
+#if GOOGLE_CUDA
+static const char* PlatformName = "cuda";
+#else
+static const char* PlatformName = "rocm";
+#endif
+
 TEST(PoolAllocatorTest, ZeroSizeBuffers) {
   se::Platform* platform =
-      se::MultiPlatformManager::PlatformWithName("cuda").ValueOrDie();
+      se::MultiPlatformManager::PlatformWithName(PlatformName).ValueOrDie();
   PoolAllocator pool(
       2 /*pool_size_limit*/, false /*auto_resize*/,
       new GpuHostAllocator(
@@ -45,7 +51,7 @@ TEST(PoolAllocatorTest, ZeroSizeBuffers) {
 
 TEST(PoolAllocatorTest, ZeroSizePool) {
   se::Platform* platform =
-      se::MultiPlatformManager::PlatformWithName("cuda").ValueOrDie();
+      se::MultiPlatformManager::PlatformWithName(PlatformName).ValueOrDie();
   PoolAllocator pool(
       0 /*pool_size_limit*/, false /*auto_resize*/,
       new GpuHostAllocator(
@@ -79,7 +85,7 @@ TEST(PoolAllocatorTest, ZeroSizePool) {
 
 TEST(PoolAllocatorTest, Alignment) {
   se::Platform* platform =
-      se::MultiPlatformManager::PlatformWithName("cuda").ValueOrDie();
+      se::MultiPlatformManager::PlatformWithName(PlatformName).ValueOrDie();
   PoolAllocator pool(
       0 /*pool_size_limit*/, false /*auto_resize*/,
       new GpuHostAllocator(
@@ -141,7 +147,7 @@ TEST(PoolAllocatorTest, CudaHostAllocator) {
         free_size += size;
       };
   se::Platform* platform =
-      se::MultiPlatformManager::PlatformWithName("cuda").ValueOrDie();
+      se::MultiPlatformManager::PlatformWithName(PlatformName).ValueOrDie();
   GpuHostAllocator* sub_allocator = new GpuHostAllocator(
       platform->GetExecutor(se::StreamExecutorConfig(/*ordinal=*/0))
           .ValueOrDie(),
@@ -244,7 +250,7 @@ TEST(PoolAllocatorTest, Pow2Rounder) {
 
 TEST(PoolAllocatorTest, Name) {
   se::Platform* platform =
-      se::MultiPlatformManager::PlatformWithName("cuda").ValueOrDie();
+      se::MultiPlatformManager::PlatformWithName(PlatformName).ValueOrDie();
   PoolAllocator pool(
       2 /*pool_size_limit*/, false /*auto_resize*/,
       new GpuHostAllocator(

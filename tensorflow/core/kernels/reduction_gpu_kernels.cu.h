@@ -852,7 +852,16 @@ template <typename T, typename Op, typename OUT_T, typename IN_T>
 void LaunchColumnReduction_LTE4096Cols(OpKernelContext* ctx, OUT_T out, IN_T in,
                                        int extent_x, int extent_y, Op op,
                                        T init, const gpuStream_t& cu_stream) {
-  constexpr int WARPSIZE = std::is_same<T, hipDoubleComplex>::value ? (TF_RED_WARPSIZE/2) : TF_RED_WARPSIZE;
+#if TENSORFLOW_USE_ROCM  
+  // On ROCm, TF_RED_WARPSIZE is 64 and the default value would require
+  // 66 kB of shared memory with double complex - more than actually
+  // available in the GPU.
+  constexpr int WARPSIZE = std::is_same<T, hipDoubleComplex>::value 
+    ? (TF_RED_WARPSIZE/2) 
+    : TF_RED_WARPSIZE;
+#else
+  constexpr int WARPSIZE = TF_RED_WARPSIZE;
+#endif
   dim3 block_dim(WARPSIZE, std::min(extent_x, (1024 / WARPSIZE)),
                  1);
   dim3 grid_dim((extent_y + (WARPSIZE - 1)) / WARPSIZE, 1, 1);

@@ -37,9 +37,6 @@ typedef Eigen::GpuDevice GPUDevice;
 
 namespace functor {
 
-// TODO(rocm): disabling this code on the ROCm platform since the references
-// to `half2` are leading to compile errors.
-
 // This kernel computes ReluGrad by processing one half2, two fp16, at a time.
 // It effectively does: backdrops = (feature > 0) ? gradient : 0
 // It also tries to use native half2 primitives as much as possible.
