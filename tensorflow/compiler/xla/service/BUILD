@@ -2317,6 +2317,7 @@ xla_test(
         "//tensorflow/compiler/xla/tests:hlo_test_base",
         "//tensorflow/compiler/xla/tests:literal_test_util",
         "//tensorflow/core:test",
+        "@com_google_absl//absl/strings",
     ],
 )
 
