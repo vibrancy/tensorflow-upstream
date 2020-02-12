@@ -1,6 +1,11 @@
 # Description:
 #   MLIR-GPU-specific components in XLA service implementation.
 
+load(
+    "//tensorflow/core/platform/default:cuda_build_defs.bzl",
+    "if_cuda_is_configured",
+)
+
 package(
     default_visibility = [":friends"],
     licenses = ["notice"],  # Apache 2.0
@@ -53,9 +58,9 @@ cc_library(
 
 cc_library(
     name = "mlir_compiler",
-    srcs = ["mlir_compiler.cc"],
-    hdrs = ["mlir_compiler.h"],
-    deps = [
+    srcs = if_cuda_is_configured(["mlir_compiler.cc"]),
+    hdrs = if_cuda_is_configured(["mlir_compiler.h"]),
+    deps = if_cuda_is_configured([
         ":emission_context",
         ":failover_compiler",
         ":kernel_lowering",
@@ -87,7 +92,7 @@ cc_library(
         "@local_config_mlir//:StandardOps",
         "@local_config_mlir//:Support",
         "@local_config_mlir//:TargetNVVMIR",
-    ],
+    ]),
     alwayslink = True,  # Contains compiler registration
 )
 
@@ -167,9 +172,9 @@ cc_library(
 cc_library(
     name = "mlir_irgen_test_base",
     testonly = True,
-    srcs = ["mlir_irgen_test_base.cc"],
-    hdrs = ["mlir_irgen_test_base.h"],
-    deps = [
+    srcs = if_cuda_is_configured(["mlir_irgen_test_base.cc"]),
+    hdrs = if_cuda_is_configured(["mlir_irgen_test_base.h"]),
+    deps = if_cuda_is_configured([
         ":failover_compiler",
         ":inject_errors_pass",
         ":mlir_compiler",
@@ -181,5 +186,5 @@ cc_library(
         "@llvm//:support",
         "@local_config_mlir//:IR",
         "@local_config_mlir//:Pass",
-    ],
+    ]),
 )

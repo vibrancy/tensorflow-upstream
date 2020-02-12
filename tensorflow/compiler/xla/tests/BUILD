@@ -2119,7 +2119,7 @@ xla_test(
 tf_cc_test(
     name = "llvm_compiler_test",
     srcs = ["llvm_compiler_test.cc"],
-    tags = tf_cuda_tests_tags(),
+    tags = tf_cuda_tests_tags() + ["no_rocm"],
     deps = [
         ":verified_hlo_module",
         "//tensorflow/compiler/xla:literal_util",
