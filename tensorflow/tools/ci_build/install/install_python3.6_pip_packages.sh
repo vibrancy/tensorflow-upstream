@@ -116,4 +116,7 @@ pip3 install keras_preprocessing==1.0.5
 # Estimator
 pip3 install tf-estimator-nightly==1.12.0.dev20181203 --no-deps
 
+# Tensorboard
+pip3 install tb-nightly --no-deps
+
 # LINT.ThenChange(//tensorflow/tools/ci_build/install/install_python3.5_pip_packages.sh)
