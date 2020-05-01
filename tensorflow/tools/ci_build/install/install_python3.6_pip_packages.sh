@@ -49,6 +49,13 @@ cd Python-3.6.1
 make altinstall
 ln -s /usr/local/bin/pip3.6 /usr/local/bin/pip3
 
+# Add a "/usr/local/bin/python3" softlink to point to the python3.6
+# install we did above (i.e to /usr/local/bin/python3.6)
+# By default, /usr/local/bin comes before /usr/bin in the PATH
+# So "which python3" will pickup /usr/local/bin/python3
+ln -s /usr/local/bin/python3.6 /usr/local/bin/python3
+ln -s /usr/local/bin/pydoc3.6 /usr/local/bin/pydoc3
+
 pip3 install --upgrade pip
 
 # Install last working version of setuptools. This must happen before we install
