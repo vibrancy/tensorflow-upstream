@@ -259,6 +259,7 @@ cc_library(
         ":xplane_to_memory_profile",
         ":xplane_to_op_stats",
         ":xplane_to_trace_events",
+        "//tensorflow/core:human_readable_json",
         "//tensorflow/core:lib",
         "//tensorflow/core/profiler:profiler_service_proto_cc",
         "//tensorflow/core/profiler/protobuf:hardware_types_proto_cc",
@@ -309,6 +310,7 @@ cc_library(
         "//tensorflow/core/profiler/utils:tf_xplane_visitor",
         "//tensorflow/core/profiler/utils:trace_utils",
         "//tensorflow/core/profiler/utils:xplane_schema",
+        "@com_google_absl//absl/strings",
     ],
 )
 
