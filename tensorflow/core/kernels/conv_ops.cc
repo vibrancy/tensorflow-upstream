@@ -69,6 +69,8 @@ limitations under the License.
 #include "tensorflow/stream_executor/tf_allocator_adapter.h"
 #endif  // GOOGLE_CUDA
 
+#include "tensorflow/core/profiler/lib/scoped_annotation.h"
+
 namespace tensorflow {
 
 typedef Eigen::ThreadPoolDevice CPUDevice;
@@ -693,14 +695,17 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
                                 output->template flat<T>().size());
 
     auto no_transpose = se::blas::Transpose::kNoTranspose;
-    bool blas_launch_status =
-        stream
-            ->ThenBlasGemm(no_transpose, no_transpose, n, m, k, 1.0f, b_ptr, n,
-                           a_ptr, k, 0.0f, &c_ptr, n)
-            .ok();
-    if (!blas_launch_status) {
-      ctx->SetStatus(errors::Internal("Blas SGEMM launch failed : m=", m,
-                                      ", n=", n, ", k=", k));
+    {
+      profiler::ScopedAnnotation label("ThenBlasGemm");
+      bool blas_launch_status =
+          stream
+              ->ThenBlasGemm(no_transpose, no_transpose, n, m, k, 1.0f, b_ptr,
+                             n, a_ptr, k, 0.0f, &c_ptr, n)
+              .ok();
+      if (!blas_launch_status) {
+        ctx->SetStatus(errors::Internal("Blas SGEMM launch failed : m=", m,
+                                        ", n=", n, ", k=", k));
+      }
     }
     return;
   } else if (patch_rows == in_rows && patch_cols == in_cols &&
@@ -721,14 +726,17 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
                                 output->template flat<T>().size());
 
     auto no_transpose = se::blas::Transpose::kNoTranspose;
-    bool blas_launch_status =
-        stream
-            ->ThenBlasGemm(no_transpose, no_transpose, n, m, k, 1.0f, b_ptr, n,
-                           a_ptr, k, 0.0f, &c_ptr, n)
-            .ok();
-    if (!blas_launch_status) {
-      ctx->SetStatus(errors::Internal("Blas SGEMM launch failed : m=", m,
-                                      ", n=", n, ", k=", k));
+    {
+      profiler::ScopedAnnotation label("ThenBlasGemm");
+      bool blas_launch_status =
+          stream
+              ->ThenBlasGemm(no_transpose, no_transpose, n, m, k, 1.0f, b_ptr,
+                             n, a_ptr, k, 0.0f, &c_ptr, n)
+              .ok();
+      if (!blas_launch_status) {
+        ctx->SetStatus(errors::Internal("Blas SGEMM launch failed : m=", m,
+                                        ", n=", n, ", k=", k));
+      }
     }
     return;
   }
@@ -919,11 +927,13 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
 
     TF_RETURN_IF_ERROR(ctx->allocate_temp(DataTypeToEnum<T>::value, dst_shape,
                                           &transformed_filter));
-    functor::TransformFilter<GPUDevice, T, int, 4>()(
-        ctx->eigen_device<GPUDevice>(), dst_format,
-        To32Bit(filter.tensor<T, 4>()),
-        To32Bit(transformed_filter.tensor<T, 4>()));
-
+    {
+      profiler::ScopedAnnotation label("Convert_HWIO_to_OIHW");
+      functor::TransformFilter<GPUDevice, T, int, 4>()(
+          ctx->eigen_device<GPUDevice>(), dst_format,
+          To32Bit(filter.tensor<T, 4>()),
+          To32Bit(transformed_filter.tensor<T, 4>()));
+    }
     return Status::OK();
   };
 
@@ -1053,15 +1063,18 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
 
 #elif TENSORFLOW_USE_ROCM
     std::vector<ProfileResult> algorithms;
-    OP_REQUIRES(ctx,
-                stream->parent()->GetMIOpenConvolveAlgorithms(
-                    se::dnn::ConvolutionKind::FORWARD, stream,
-                    se::dnn::ToDataType<T>::value, input_desc, filter_desc,
-                    conv_desc, output_desc, &algorithms),
-                errors::Unknown(
-                    "Failed to get convolution algorithm. This is probably "
-                    "because MIOpen failed to initialize, so try looking to "
-                    "see if a warning log message was printed above."));
+    {
+      profiler::ScopedAnnotation label("AutoTuner");
+      OP_REQUIRES(ctx,
+                  stream->parent()->GetMIOpenConvolveAlgorithms(
+                      se::dnn::ConvolutionKind::FORWARD, stream,
+                      se::dnn::ToDataType<T>::value, input_desc, filter_desc,
+                      conv_desc, output_desc, &algorithms),
+                  errors::Unknown(
+                      "Failed to get convolution algorithm. This is probably "
+                      "because MIOpen failed to initialize, so try looking to "
+                      "see if a warning log message was printed above."));
+    }
     se::DeviceMemory<T> output_tensor = output_ptr;
 
     std::vector<tensorflow::AutotuneResult> results;
@@ -1078,6 +1091,7 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
       *result.mutable_run_time() = proto_utils::ToDurationProto(
           absl::Milliseconds(profile_result.elapsed_time_in_ms()));
     } else {
+      profiler::ScopedAnnotation label("AutoTuner");
       for (auto miopen_algorithm : algorithms) {
         auto profile_algorithm = miopen_algorithm.algorithm();
         DnnScratchAllocator scratch_allocator(ConvolveScratchSize, ctx);
@@ -1118,14 +1132,17 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
           << algorithm_config.algorithm()->tensor_ops_enabled();
 
   DnnScratchAllocator scratch_allocator(ConvolveScratchSize, ctx);
-  bool cudnn_launch_status =
-      stream
-          ->ThenConvolveWithAlgorithm(input_desc, input_ptr, filter_desc,
-                                      filter_ptr, conv_desc, output_desc,
-                                      &output_ptr, &scratch_allocator,
-                                      algorithm_config, nullptr)
-          .ok();
-
+  bool cudnn_launch_status = false;
+  {
+    profiler::ScopedAnnotation label("ThenConvolveWithAlgorithm");
+    cudnn_launch_status =
+        stream
+            ->ThenConvolveWithAlgorithm(input_desc, input_ptr, filter_desc,
+                                        filter_ptr, conv_desc, output_desc,
+                                        &output_ptr, &scratch_allocator,
+                                        algorithm_config, nullptr)
+            .ok();
+  }
   if (!cudnn_launch_status) {
     ctx->SetStatus(errors::Internal(
         "cuDNN launch failure : input shape(", input.shape().DebugString(),
@@ -1133,6 +1150,7 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
   }
 
   if (data_format == FORMAT_NHWC && compute_data_format == FORMAT_NCHW) {
+    profiler::ScopedAnnotation label("Convert_NCHW_to_NHWC");
     VLOG(4) << "Convert the output tensor back from NCHW to NHWC.";
     functor::NCHWToNHWC<GPUDevice, T, 4>()(
         ctx->eigen_device<GPUDevice>(),
