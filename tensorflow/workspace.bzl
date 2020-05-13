@@ -162,18 +162,19 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
         print("path_prefix was specified to tf_workspace but is no longer used " +
               "and will be removed in the future.")
 
-    TFRT_COMMIT = "0bad623e8d99ace05f7f60e9e7f8b53ec813d66a"
-    TFRT_SHA256 = "d002429866d2d824a80dcf6c1602a15398412bc01324200d371c55b13b9a4b27"
-    TFRT_URLS = [
-        "http://mirror.tensorflow.org/github.com/tensorflow/runtime/archive/{commit}.zip".format(commit = TFRT_COMMIT),
-        "https://github.com/tensorflow/runtime/archive/{commit}.zip".format(commit = TFRT_COMMIT),
-    ]
-    tf_http_archive(
-        name = "tf_runtime",
-        sha256 = TFRT_SHA256,
-        strip_prefix = "runtime-" + TFRT_COMMIT,
-        urls = TFRT_URLS,
-    )
+    # WORKAROUND: (parallelo) temporarily disable TFRT, as there appears to be a tf_runtime / llvm-project mismatch that breaks rocm-xla
+    #TFRT_COMMIT = "0bad623e8d99ace05f7f60e9e7f8b53ec813d66a"
+    #TFRT_SHA256 = "d002429866d2d824a80dcf6c1602a15398412bc01324200d371c55b13b9a4b27"
+    #TFRT_URLS = [
+    #    "http://mirror.tensorflow.org/github.com/tensorflow/runtime/archive/{commit}.zip".format(commit = TFRT_COMMIT),
+    #    "https://github.com/tensorflow/runtime/archive/{commit}.zip".format(commit = TFRT_COMMIT),
+    #]
+    #tf_http_archive(
+    #    name = "tf_runtime",
+    #    sha256 = TFRT_SHA256,
+    #    strip_prefix = "runtime-" + TFRT_COMMIT,
+    #    urls = TFRT_URLS,
+    #)
 
     tf_http_archive(
         name = "XNNPACK",
