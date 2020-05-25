@@ -115,9 +115,12 @@ cc_library(
 
 tf_cc_test(
     name = "custom_call_test",
-    srcs = ["custom_call_test.cc"],
+    srcs = if_cuda_is_configured(["custom_call_test.cc"]),
     tags = ["requires-gpu-sm35"],
     deps = [
+        "//tensorflow/compiler/xla/tests:xla_internal_test_main",  # fixdeps: keep
+    ] + if_cuda_is_configured([
+        "@local_config_cuda//cuda:cuda_headers",
         "//tensorflow/compiler/xla:status_macros",
         "//tensorflow/compiler/xla:test_helpers",
         "//tensorflow/compiler/xla/client:xla_builder",
@@ -125,10 +128,8 @@ tf_cc_test(
         "//tensorflow/compiler/xla/service:custom_call_target_registry",
         "//tensorflow/compiler/xla/service:gpu_plugin",
         "//tensorflow/compiler/xla/tests:client_library_test_base",
-        "//tensorflow/compiler/xla/tests:xla_internal_test_main",  # fixdeps: keep
         "//tensorflow/core:test",
-        "@local_config_cuda//cuda:cuda_headers",
-    ],
+    ]),
 )
 
 cc_library(
