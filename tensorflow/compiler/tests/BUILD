@@ -185,6 +185,7 @@ tf_xla_py_test(
     ],
     shard_count = 2,
     tags = [
+        "no_rocm",
         "optonly",  # Times out frequently in fastbuild mode.
     ],
     deps = [
@@ -229,7 +230,10 @@ tf_xla_py_test(
     name = "cholesky_op_test",
     size = "medium",
     srcs = ["cholesky_op_test.py"],
-    tags = ["optonly"],
+    tags = [
+        "no_rocm",
+        "optonly",
+    ],
     deps = [
         ":xla_test",
         "//tensorflow/python:array_ops",
@@ -1321,6 +1325,7 @@ cuda_py_test(
         "//tensorflow/python:platform",
         "//tensorflow/python:variables",
     ],
+    tags = ["no_rocm"],
     xla_enable_strict_auto_jit = False,
 )
 

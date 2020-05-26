@@ -1549,6 +1549,7 @@ tf_cc_test(
     name = "cudnn_fused_conv_rewriter_test",
     srcs = ["cudnn_fused_conv_rewriter_test.cc"],
     tags = [
+        "no_rocm",
         "noasan",
         "nomsan",
         "requires-gpu-sm70",

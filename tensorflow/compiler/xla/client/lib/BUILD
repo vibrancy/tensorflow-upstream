@@ -38,6 +38,7 @@ cc_library(
 xla_test(
     name = "arithmetic_test",
     srcs = ["arithmetic_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":arithmetic",
         "//tensorflow/compiler/xla:literal_util",
@@ -197,6 +198,7 @@ cc_library(
 xla_test(
     name = "matrix_test",
     srcs = ["matrix_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":constants",
         ":matrix",
@@ -230,6 +232,7 @@ cc_library(
 xla_test(
     name = "pooling_test",
     srcs = ["pooling_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":pooling",
         "//tensorflow/compiler/xla:test",
@@ -277,7 +280,10 @@ cc_library(
 xla_test(
     name = "qr_test",
     srcs = ["qr_test.cc"],
-    tags = ["optonly"],
+    tags = [
+        "no_rocm",
+        "optonly",
+    ],
     deps = [
         ":matrix",
         ":qr",
@@ -312,6 +318,7 @@ cc_library(
 xla_test(
     name = "slicing_test",
     srcs = ["slicing_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":slicing",
         "//tensorflow/compiler/xla:literal",
@@ -342,6 +349,7 @@ cc_library(
 xla_test(
     name = "sorting_test",
     srcs = ["sorting_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":sorting",
         "//tensorflow/compiler/xla:test",
@@ -567,7 +575,10 @@ cc_library(
 xla_test(
     name = "logdet_test",
     srcs = ["logdet_test.cc"],
-    tags = ["optonly"],
+    tags = [
+        "no_rocm",
+        "optonly",
+    ],
     deps = [
         ":logdet",
         ":matrix",

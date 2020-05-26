@@ -42,6 +42,7 @@ cc_library(
 tf_cc_test(
     name = "conv_emitter_test",
     srcs = ["conv_emitter_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":conv_emitter",
         "//tensorflow/compiler/xla/service:hlo_parser",

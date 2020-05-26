@@ -486,6 +486,7 @@ xla_test(
         "cpu",
         "gpu",
     ],
+    tags = ["no_rocm"],
     deps = [
         ":hlo_parser",
         "//tensorflow/compiler/xla:execution_options_util",
@@ -2297,6 +2298,7 @@ cc_library(
 xla_test(
     name = "dynamic_padder_test",
     srcs = ["dynamic_padder_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":dynamic_padder",
         ":hlo",
@@ -4081,6 +4083,7 @@ tf_cc_test(
     name = "hlo_parser_test",
     size = "small",
     srcs = ["hlo_parser_test.cc"],
+    tags = ["no_rocm"],
     deps = [
         ":hlo",
         ":hlo_casting_utils",

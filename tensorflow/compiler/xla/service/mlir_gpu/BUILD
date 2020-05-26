@@ -2,7 +2,7 @@
 #   MLIR-GPU-specific components in XLA service implementation.
 
 load(
-    "//tensorflow/core/platform/default:cuda_build_defs.bzl",
+    "//tensorflow/core/platform:default/cuda_build_defs.bzl",
     "if_cuda_is_configured",
 )
 
