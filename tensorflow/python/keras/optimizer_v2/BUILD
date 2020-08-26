@@ -149,6 +149,7 @@ cuda_py_test(
     size = "medium",
     srcs = ["adadelta_test.py"],
     shard_count = 4,
+    tags = ["no_rocm"],
     deps = [
         ":optimizer_v2",
         "//tensorflow/python:client_testlib",
@@ -285,6 +286,7 @@ cuda_py_test(
     size = "medium",
     srcs = ["rmsprop_test.py"],
     shard_count = 2,
+    tags = ["no_rocm"],
     deps = [
         ":optimizer_v2",
         "//tensorflow/python:array_ops",
