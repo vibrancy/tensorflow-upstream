@@ -1306,6 +1306,12 @@ void LaunchConv2DBackpropInputOp<GPUDevice, T>::operator()(
     const int64 input_pad_bottom = padding_bottom - common_padding_rows;
     const int64 input_pad_left = padding_left - common_padding_cols;
     const int64 input_pad_right = padding_right - common_padding_cols;
+    
+    T padding_value = T(0);
+    VLOG(-1) << "\n\n\n"
+	     << "---" << static_cast<float>(padding_value)
+	     << "\n\n\n";
+
     functor::PadInput<GPUDevice, T, int, 4>()(
         ctx->template eigen_device<GPUDevice>(),
         To32Bit(const_cast<const Tensor&>(pre_transformed_in_backprop)
@@ -1314,7 +1320,7 @@ void LaunchConv2DBackpropInputOp<GPUDevice, T>::operator()(
         {{static_cast<int>(-input_pad_bottom),
           static_cast<int>(-input_pad_right)}},
         To32Bit(in_backprop_remove_padding.tensor<T, 4>()),
-        compute_data_format);
+        compute_data_format, padding_value);
 
     pre_transformed_in_backprop = in_backprop_remove_padding;
   }
@@ -1346,7 +1352,7 @@ namespace functor {
       const std::array<int, 2>& padding_left,                           \
       const std::array<int, 2>& padding_right,                          \
       typename TTypes<T, 4, int>::Tensor out, TensorFormat data_format, \
-      T padding_value);                                                 \
+      T padding_value, int dummy);						\
   extern template struct PadInput<GPUDevice, T, int, 4>;
 
 DECLARE_GPU_SPEC(float);

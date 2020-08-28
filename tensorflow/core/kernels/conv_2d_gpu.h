@@ -568,7 +568,7 @@ struct PadInput<GPUDevice, T, int, NDIMS> {
                   const std::array<int, NDIMS - 2>& padding_left,
                   const std::array<int, NDIMS - 2>& padding_right,
                   typename TTypes<T, NDIMS, int>::Tensor out,
-                  TensorFormat format, T padding_value = T{}) {
+                  TensorFormat format, T padding_value, int dummy=0) {
     GpuLaunchConfig config = GetGpuLaunchConfig(out.size(), d);
     Dimension<NDIMS> input_dims;
     for (int i = 0; i < NDIMS; ++i) {
@@ -580,6 +580,10 @@ struct PadInput<GPUDevice, T, int, NDIMS> {
     }
 
     const Dimension<NDIMS - 2> padding_left_dim(padding_left);
+
+    VLOG(-1) << "\n\n\n"
+	     << static_cast<float>(padding_value)
+	     << "\n\n\n";
 
     if (format == FORMAT_NHWC) {
       TF_CHECK_OK(GpuLaunchKernel(

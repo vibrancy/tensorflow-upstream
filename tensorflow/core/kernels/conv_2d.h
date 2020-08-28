@@ -316,7 +316,7 @@ struct PadInput {
                   const std::array<int, NDIMS - 2>& padding_left,
                   const std::array<int, NDIMS - 2>& padding_right,
                   typename TTypes<T, NDIMS, IndexType>::Tensor out,
-                  TensorFormat format, T padding_value = T{}) {
+                  TensorFormat format, T padding_value, int dummy=0) {
     Eigen::array<Eigen::IndexPair<IndexType>, NDIMS> padding;
     padding[GetTensorDimIndex<NDIMS - 2>(format, 'N')] = {0, 0};
     for (int i = 0; i < NDIMS - 2; ++i) {

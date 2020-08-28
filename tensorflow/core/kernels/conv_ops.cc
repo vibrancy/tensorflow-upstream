@@ -822,12 +822,18 @@ void LaunchConv2DOp<GPUDevice, T>::operator()(
       ctx->SetStatus(errors::InvalidArgument("Padding is too large."));
       return;
     }
+
+    T padding_value = T(0);
+    VLOG(-1) << "\n\n\n"
+	     << "---" << static_cast<float>(padding_value)
+	     << "\n\n\n";
+
     functor::PadInput<GPUDevice, T, int, 4>()(
         ctx->eigen_device<GPUDevice>(), To32Bit(input_param.tensor<T, 4>()),
         {{static_cast<int>(input_pad_top), static_cast<int>(input_pad_left)}},
         {{static_cast<int>(input_pad_bottom),
           static_cast<int>(input_pad_right)}},
-        To32Bit(transformed_input.tensor<T, 4>()), data_format);
+        To32Bit(transformed_input.tensor<T, 4>()), data_format, padding_value);
 
     input = transformed_input;
     in_rows = new_in_rows;
@@ -1184,7 +1190,7 @@ namespace functor {
       const std::array<int, 2>& padding_left,                               \
       const std::array<int, 2>& padding_right,                              \
       typename TTypes<T, 4, int>::Tensor out, TensorFormat data_format,     \
-      T padding_value);                                                     \
+      T padding_value, int dummy);						\
   extern template struct PadInput<GPUDevice, T, int, 4>
 
 DECLARE_GPU_SPEC(float);
